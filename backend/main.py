@@ -14,9 +14,9 @@ def seconds_to_time(seconds):
     return f"{h}:{m:02d}:{s:02d}"
 
 @app.post("/predict")
-def predict(pb_time: str, fatigue_coeff: float):
+def predict(pb_time: str, fatigue_coeff: float, temp_celsius: float = 15.0):
     pb_seconds = time_to_seconds(pb_time)
-    result = simulate_race_per_km(pb_seconds, fatigue_coeff)
+    result = simulate_race_per_km(pb_seconds, fatigue_coeff, temp_celsius)
 
     # convert mean_splits array to H:MM:SS list
     splits_hms = [seconds_to_time(s) for s in result["mean_splits"]]
@@ -26,5 +26,6 @@ def predict(pb_time: str, fatigue_coeff: float):
         "lower_5_percent": seconds_to_time(result["p5"]),
         "upper_95_percent": seconds_to_time(result["p95"]),
         "std_dev_seconds": result["std_dev"],
+        "temp_celsius": result["temp_celsius"],
         "per_km_splits": splits_hms  # time for each individual km
     }

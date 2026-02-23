@@ -1,8 +1,12 @@
 import numpy as np
-from model import fatigue_multiplier
+from model import fatigue_multiplier, heat_multiplier
 from course import LondonCourseProfile
 
-def simulate_race_per_km(pb_seconds, fatigue_coeff, simulations=10000):
+# London Marathon historical average temperature
+DEFAULT_TEMP_C = 15.0
+
+
+def simulate_race_per_km(pb_seconds, fatigue_coeff, temp_celsius=DEFAULT_TEMP_C, simulations=10000):
     base_pace = pb_seconds / 42.195
     course_profile = LondonCourseProfile()  # returns 42-element array
 
@@ -14,9 +18,10 @@ def simulate_race_per_km(pb_seconds, fatigue_coeff, simulations=10000):
 
         for km in range(42):
             fatigue = fatigue_multiplier(km + 1, fatigue_coeff)
+            heat = heat_multiplier(km + 1, temp_celsius)
             noise = np.random.normal(0, 0.003)
 
-            km_time = base_pace * fatigue * course_profile[km] * (1 + noise)
+            km_time = base_pace * fatigue * heat * course_profile[km] * (1 + noise)
             km_splits.append(km_time)  # time for this km
 
         total_time = sum(km_splits)
@@ -34,5 +39,6 @@ def simulate_race_per_km(pb_seconds, fatigue_coeff, simulations=10000):
         "std_dev": all_total_times.std(),
         "p5": np.percentile(all_total_times, 5),
         "p95": np.percentile(all_total_times, 95),
-        "mean_splits": mean_splits  # array of 42 per-km times in seconds
+        "mean_splits": mean_splits,  # array of 42 per-km times in seconds
+        "temp_celsius": temp_celsius,
     }
